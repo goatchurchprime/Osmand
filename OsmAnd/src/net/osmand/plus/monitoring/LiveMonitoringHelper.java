@@ -13,6 +13,7 @@ import net.osmand.plus.OsmandPlugin;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.helpers.ExternalApiHelper;
+import net.osmand.plus.myplaces.FavoritesActivity;
 import net.osmand.util.MapUtils;
 
 import org.apache.commons.logging.Log;
@@ -220,7 +221,7 @@ public class LiveMonitoringHelper  {
 						//String osmandapicmd = "osmand.api://add_map_marker?lat=54.6622958&lon=-5.7666790&name=thing2";
 						log.info("Monitor received"+i+": "+osmandapicmd);
 						if (osmandapicmd.startsWith("osmand.api://")) {
-							Intent intent = new Intent(activity, app.getAppCustomization().getFavoritesActivity());
+							Intent intent = new Intent(activity, FavoritesActivity.class);
 							Uri netdata = Uri.parse(osmandapicmd);
 							intent.setData(netdata);
 							Intent result = apiHelper.processApiRequest(intent);

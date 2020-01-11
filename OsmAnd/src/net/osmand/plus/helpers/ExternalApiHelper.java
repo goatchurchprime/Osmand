@@ -86,6 +86,9 @@ public class ExternalApiHelper {
 	public static final String API_CMD_GET_INFO = "get_info";
 
 	public static final String API_CMD_ADD_FAVORITE = "add_favorite";
+	public static final String API_CMD_UPDATE_FAVORITE = "update_favorite";
+	public static final String API_CMD_DELETE_FAVORITE = "delete_favorite";
+
 	public static final String API_CMD_ADD_MAP_MARKER = "add_map_marker";
 
 	public static final String API_CMD_SHOW_LOCATION = "show_location";
@@ -505,6 +508,58 @@ public class ExternalApiHelper {
 
 				showOnMap(lat, lon, fav, mapActivity.getMapLayers().getFavouritesLayer().getObjectName(fav));
 				resultCode = Activity.RESULT_OK;
+
+			} else if (API_CMD_UPDATE_FAVORITE.equals(cmd)) {
+
+				String name = uri.getQueryParameter(PARAM_NAME);
+				String desc = uri.getQueryParameter(PARAM_DESC);
+				String category = uri.getQueryParameter(PARAM_CATEGORY);
+				double lat = Double.parseDouble(uri.getQueryParameter(PARAM_LAT));
+				double lon = Double.parseDouble(uri.getQueryParameter(PARAM_LON));
+				String colorTag = uri.getQueryParameter(PARAM_COLOR);
+				boolean visible = uri.getBooleanQueryParameter(PARAM_VISIBLE, true);
+				int color = (Algorithms.isEmpty(colorTag) ? 0 : ColorDialogs.getColorByTag(colorTag));
+
+				FavouritesDbHelper helper = app.getFavorites();
+
+				FavouritePoint f = null;
+				for (FavouritePoint lf : helper.getFavouritePoints()) {
+					if (lf.getName().equals(name)) {
+						f = lf;
+						break;
+					}
+				}
+
+				if (f != null) {
+					if ((f.getLatitude() != lat) || (f.getLongitude() != lon))
+						helper.editFavourite(f, lat, lon);
+					if ((desc != null) && !f.getDescription().equals(desc))
+						helper.editFavouriteName(f, f.getName(), f.getCategory(), desc);
+					if ((category != null) && !f.getCategory().equals(category)) {
+						f.setColor(color);
+						f.setVisible(visible);
+						helper.editFavouriteName(f, f.getName(), category, f.getDescription());
+					}
+				} else {
+					FavouritePoint fav = new FavouritePoint(lat, lon, name, (category == null ? "" : category));
+					fav.setDescription((desc == null ? "" : desc));
+					fav.setColor(color);
+					fav.setVisible(visible);
+					helper.addFavourite(fav);
+				}
+				resultCode = Activity.RESULT_OK;
+
+			} else if (API_CMD_DELETE_FAVORITE.equals(cmd)) {
+				String name = uri.getQueryParameter(PARAM_NAME);
+				FavouritesDbHelper helper = app.getFavorites();
+				resultCode = RESULT_CODE_ERROR_EMPTY_SEARCH_QUERY;
+				for (FavouritePoint f : helper.getFavouritePoints()) {
+					if (f.getName().equals(name)) {
+						helper.deleteFavourite(f);
+						resultCode = Activity.RESULT_OK;
+						break;
+					}
+				}
 
 			} else if (API_CMD_ADD_MAP_MARKER.equals(cmd)) {
 				double lat = Double.parseDouble(uri.getQueryParameter(PARAM_LAT));
